@@ -1,12 +1,12 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY || "";
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const apiKey = process.env.GROQ_API_KEY || "";
+    const groq = new Groq({ apiKey });
     const { expenses } = await req.json();
     
     if (!expenses || expenses.length === 0) {
@@ -16,33 +16,37 @@ export async function POST(req: Request) {
     const expensesSummary = expenses.map((e: any) => `${e.date}: $${e.amount} at ${e.vendor} (${e.category})`).join("\n");
 
     const prompt = `Analyze the following user expenses and provide exactly 3 concise, actionable saving tips or insights.
-Format the output as a valid JSON array of strings. Do not include markdown formatting or the word json. Just return the raw JSON array.
+Format the output strictly as a JSON object with a single key "tips" containing a JSON array of strings. Do not include markdown formatting.
 
 Expenses:
 ${expensesSummary}`;
 
     let result;
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      result = await model.generateContent(prompt);
+      result = await groq.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+      });
     } catch (e: any) {
-      if (e.message?.includes("503") || e.message?.includes("Service Unavailable") || e.message?.includes("not found") || e.status === 429 || e.message?.includes("quota") || e.message?.includes("Too Many Requests")) {
-        console.warn("Primary model error or quota exceeded. Falling back to gemini-1.5-flash...");
-        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        result = await fallbackModel.generateContent(prompt);
-      } else {
-        throw e;
-      }
+      console.warn("Primary model error. Falling back to llama-3.1-8b-instant...");
+      result = await groq.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama-3.1-8b-instant",
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+      });
     }
-    const text = result.response.text();
     
+    const text = result.choices[0]?.message?.content || "";
     const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
     
     try {
-        const tips = JSON.parse(cleanText);
-        return NextResponse.json({ tips });
+        const parsed = JSON.parse(cleanText);
+        return NextResponse.json({ tips: parsed.tips || parsed || [] });
     } catch (e) {
-        console.error("Failed to parse Gemini tips response as JSON", text);
+        console.error("Failed to parse Groq response as JSON", text);
         return NextResponse.json({ tips: ["Keep track of your spending patterns to find savings."] });
     }
 

@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -11,55 +11,71 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Image data is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "API key not configured." }, { status: 500 });
     }
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const groq = new Groq({ apiKey });
 
     const prompt = `You are an AI assistant parsing physical expense receipts. 
 Extract the total amount, category, vendor, and date from the uploaded receipt image.
 If the date is missing or illegible, assume today's date: ${new Date().toISOString()}.
-Return ONLY a raw valid JSON object with these exact keys: "amount" (number), "category" (string), "vendor" (string), "date" (string, ISO format YYYY-MM-DD format). Do not enclose it in markdown blocks or json ticks. Just the raw JSON.`;
+Return ONLY a raw valid JSON object with these exact keys: "amount" (number), "category" (string), "vendor" (string), "date" (string, ISO format YYYY-MM-DD format). Do not enclose it in markdown blocks.`;
 
     let result;
+    const base64Data = imageBase64.includes(",") ? imageBase64.split(",")[1] : imageBase64;
+    
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: imageBase64.split(",")[1] || imageBase64,
-            mimeType: mimeType || "image/jpeg"
-          }
-        }
-      ]);
-    } catch (e: any) {
-      if (e.message?.includes("503") || e.message?.includes("Service Unavailable") || e.message?.includes("not found") || e.status === 429 || e.message?.includes("quota") || e.message?.includes("Too Many Requests")) {
-        console.warn("Primary model error or quota exceeded. Falling back to gemini-1.5-flash...");
-        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        result = await fallbackModel.generateContent([
-          prompt,
+      result = await groq.chat.completions.create({
+        messages: [
           {
-            inlineData: {
-              data: imageBase64.split(",")[1] || imageBase64,
-              mimeType: mimeType || "image/jpeg"
-            }
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType || "image/jpeg"};base64,${base64Data}`
+                }
+              }
+            ]
           }
-        ]);
-      } else {
-        throw e;
-      }
+        ],
+        model: "llama-3.2-11b-vision-preview",
+        temperature: 0,
+        response_format: { type: "json_object" },
+      });
+    } catch (e: any) {
+      console.warn("Primary vision model error. Falling back to llama-3.2-90b-vision-preview...");
+      result = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType || "image/jpeg"};base64,${base64Data}`
+                }
+              }
+            ]
+          }
+        ],
+        model: "llama-3.2-90b-vision-preview",
+        temperature: 0,
+        response_format: { type: "json_object" },
+      });
     }
 
-    const text = result.response.text();
+    const text = result.choices[0]?.message?.content || "";
     const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
     
     try {
         const parsedData = JSON.parse(cleanText);
         return NextResponse.json(parsedData);
     } catch (e) {
-        console.error("Failed to parse Gemini vision response as JSON", text);
+        console.error("Failed to parse Groq vision response as JSON", text);
         return NextResponse.json({ error: "Failed to parse receipt data. Text returned: " + text }, { status: 500 });
     }
 
