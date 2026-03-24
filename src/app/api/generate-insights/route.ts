@@ -23,12 +23,12 @@ ${expensesSummary}`;
 
     let result;
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       result = await model.generateContent(prompt);
     } catch (e: any) {
-      if (e.message?.includes("503") || e.message?.includes("Service Unavailable")) {
-        console.warn("Primary model 503 error. Falling back to gemini-2.5-flash-8b...");
-        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-8b" });
+      if (e.message?.includes("503") || e.message?.includes("Service Unavailable") || e.message?.includes("not found")) {
+        console.warn("Primary model error. Falling back to gemini-1.5-flash...");
+        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         result = await fallbackModel.generateContent(prompt);
       } else {
         throw e;
