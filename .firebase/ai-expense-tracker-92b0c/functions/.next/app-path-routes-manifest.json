@@ -1,0 +1,12 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/add/page": "/add",
+  "/api/generate-insights/route": "/api/generate-insights",
+  "/api/parse-expense/route": "/api/parse-expense",
+  "/api/parse-receipt/route": "/api/parse-receipt",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/",
+  "/profile/page": "/profile",
+  "/transactions/page": "/transactions"
+}

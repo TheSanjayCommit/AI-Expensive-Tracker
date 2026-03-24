@@ -1,0 +1,12 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/add/page": "app/add/page.js",
+  "/api/generate-insights/route": "app/api/generate-insights/route.js",
+  "/api/parse-expense/route": "app/api/parse-expense/route.js",
+  "/api/parse-receipt/route": "app/api/parse-receipt/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/transactions/page": "app/transactions/page.js"
+}
