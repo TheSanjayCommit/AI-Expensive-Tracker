@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, getRedirectResult, User } from "firebase/auth";
 import { auth, getExpenses, addExpense as addExpenseToAPI, deleteExpense as deleteExpenseFromAPI, Expense } from "@/lib/firebase";
 
 interface ExpenseContextType {
@@ -19,6 +19,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  // Handle the user landing back on the app after signInWithRedirect
+  useEffect(() => {
+    getRedirectResult(auth).catch((error) => {
+      console.error("Redirect sign-in error:", error);
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
