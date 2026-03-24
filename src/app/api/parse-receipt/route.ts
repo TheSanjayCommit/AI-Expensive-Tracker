@@ -35,8 +35,8 @@ Return ONLY a raw valid JSON object with these exact keys: "amount" (number), "c
         }
       ]);
     } catch (e: any) {
-      if (e.message?.includes("503") || e.message?.includes("Service Unavailable") || e.message?.includes("not found")) {
-        console.warn("Primary model error. Falling back to gemini-1.5-flash...");
+      if (e.message?.includes("503") || e.message?.includes("Service Unavailable") || e.message?.includes("not found") || e.status === 429 || e.message?.includes("quota") || e.message?.includes("Too Many Requests")) {
+        console.warn("Primary model error or quota exceeded. Falling back to gemini-1.5-flash...");
         const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         result = await fallbackModel.generateContent([
           prompt,
