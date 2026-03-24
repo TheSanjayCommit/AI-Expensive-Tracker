@@ -22,7 +22,16 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        // Provide a mock user so the app works without login
+        setUser({ 
+          uid: "guest_user", 
+          email: "guest@example.com",
+          displayName: "Guest User" 
+        } as User);
+      }
       setIsAuthChecking(false);
     });
     return () => unsubscribe();

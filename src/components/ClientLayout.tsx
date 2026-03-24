@@ -18,6 +18,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  /* Temporarily disabled login screen
   if (!user) {
     return (
       <main className="min-h-screen relative p-6 sm:p-12 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
@@ -47,11 +48,12 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       </main>
     );
   }
+  */
 
   // Authenticated Layout
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row font-sans selection:bg-primary-500/30">
-      <Navigation user={user} />
+      <Navigation user={user!} />
       <main className="flex-1 h-screen overflow-y-auto w-full md:pl-64 pb-24 md:pb-0 relative">
         {/* Subtle global background blobs */}
         <div className="fixed top-0 left-64 w-[500px] h-[500px] bg-primary-600/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
