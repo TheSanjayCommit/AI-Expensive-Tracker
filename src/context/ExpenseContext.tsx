@@ -2,12 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { onAuthStateChanged, getRedirectResult, User } from "firebase/auth";
-import { auth, getExpenses, addExpense as addExpenseToAPI, deleteExpense as deleteExpenseFromAPI, Expense } from "@/lib/firebase";
+import { db, getExpenses, addExpense as addExpenseToAPI, deleteExpense as deleteExpenseFromAPI, Expense, CustomUser, saveProfile } from "@/lib/firebase";
 
 interface ExpenseContextType {
-  user: User | null;
+  user: CustomUser | null;
   expenses: Expense[];
   isLoading: boolean;
+  register: (profile: Omit<CustomUser, "uid">) => Promise<void>;
+  logout: () => void;
   addExpense: (expenseData: Omit<Expense, "id" | "createdAt" | "userId">) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
 }
@@ -15,31 +17,47 @@ interface ExpenseContextType {
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 
 export function ExpenseProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<CustomUser | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
 
-  // Handle the user landing back on the app after signInWithRedirect
+  // Initialize from LocalStorage
   useEffect(() => {
-    getRedirectResult(auth).catch((error) => {
-      console.error("Redirect sign-in error:", error);
-    });
+    const savedUser = localStorage.getItem("expense_user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user", e);
+      }
+    }
+    setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsAuthChecking(false);
-    });
-    return () => unsubscribe();
-  }, []);
+  const register = async (profileData: Omit<CustomUser, "uid">) => {
+    setIsLoading(true);
+    try {
+      const newUser = await saveProfile(profileData);
+      setUser(newUser);
+      localStorage.setItem("expense_user", JSON.stringify(newUser));
+    } catch (error) {
+      console.error("Registration failed:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("expense_user");
+    setExpenses([]);
+  };
 
   useEffect(() => {
     const fetchInitialLogs = async () => {
-      if (!user) {
+      if (!user?.uid) {
          setExpenses([]);
-         setIsLoading(false);
          return;
       }
       setIsLoading(true);
@@ -53,10 +71,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    if (!isAuthChecking) {
-       fetchInitialLogs();
-    }
-  }, [user, isAuthChecking]);
+    fetchInitialLogs();
+  }, [user]);
 
   const addExpense = async (expenseData: Omit<Expense, "id" | "createdAt" | "userId">) => {
     if (!user) throw new Error("Must be logged in");
@@ -81,7 +97,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ExpenseContext.Provider value={{ user, expenses, isLoading: isAuthChecking ? true : isLoading, addExpense, deleteExpense }}>
+    <ExpenseContext.Provider value={{ user, expenses, isLoading, register, logout, addExpense, deleteExpense }}>
       {children}
     </ExpenseContext.Provider>
   );

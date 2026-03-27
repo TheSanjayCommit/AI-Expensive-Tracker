@@ -1,16 +1,16 @@
-"use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PlusCircle, ReceiptText, UserCircle } from "lucide-react";
-import { User } from "firebase/auth";
+import { LayoutDashboard, PlusCircle, ReceiptText, UserCircle, LogOut } from "lucide-react";
+import { CustomUser } from "@/lib/firebase";
+import { useExpenseContext } from "@/context/ExpenseContext";
 
 interface NavigationProps {
-  user: User;
+  user: CustomUser;
 }
 
 export function Navigation({ user }: NavigationProps) {
   const pathname = usePathname();
+  const { logout } = useExpenseContext();
   
   const navItems = [
     { name: "Overview", href: "/", icon: LayoutDashboard },
@@ -27,7 +27,7 @@ export function Navigation({ user }: NavigationProps) {
           <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
              <span className="text-xl">🎙️</span>
           </div>
-          <h1 className="text-xl font-bold tracking-tight">AI Expense</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white">AI Expense</h1>
         </div>
         
         <div className="flex flex-col gap-2 flex-1">
@@ -51,23 +51,29 @@ export function Navigation({ user }: NavigationProps) {
           })}
         </div>
 
-        <div className="mt-auto pt-6 border-t border-white/5 flex items-center gap-3 overflow-hidden">
-          {user.photoURL ? (
-            <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full bg-white/10" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-500 font-bold">
-              {user.displayName?.charAt(0) || "U"}
+        <div className="mt-auto flex flex-col gap-4">
+          <button 
+            onClick={logout}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-red-400 hover:bg-red-400/10 transition-all font-medium group"
+          >
+            <LogOut className="w-5 h-5 group-hover:text-red-400" />
+            Sign Out
+          </button>
+
+          <div className="pt-6 border-t border-white/5 flex items-center gap-3 overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-500 font-bold shrink-0">
+              {user.name?.charAt(0) || "U"}
             </div>
-          )}
-          <div className="flex flex-col truncate">
-            <span className="text-sm font-medium truncate">{user.displayName || "User"}</span>
-            <span className="text-xs text-foreground/50 truncate">{user.email}</span>
+            <div className="flex flex-col truncate">
+              <span className="text-sm font-medium truncate text-white">{user.name || "User"}</span>
+              <span className="text-xs text-foreground/50 truncate">{user.profession || user.email}</span>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Mobile Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full h-20 glass dark:glass-dark border-t border-white/5 z-50 flex justify-around items-center px-2 pb-safe">
+      <nav className="md:hidden fixed bottom-1 left-0 w-full h-20 glass dark:glass-dark border-t border-white/5 z-50 flex justify-around items-center px-4 pb-safe rounded-t-3xl">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -90,3 +96,4 @@ export function Navigation({ user }: NavigationProps) {
     </>
   );
 }
+

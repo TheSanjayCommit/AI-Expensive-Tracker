@@ -21,12 +21,16 @@ const provider = new GoogleAuthProvider();
 
 export { app, db, auth };
 
-export const loginWithGoogle = async () => {
+export const saveProfile = async (profile: Omit<CustomUser, "uid">) => {
   try {
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    console.error("Login with redirect failed:", error);
-    throw error;
+    const docRef = await addDoc(collection(db, "users"), {
+      ...profile,
+      createdAt: new Date(),
+    });
+    return { uid: docRef.id, ...profile };
+  } catch (e) {
+    console.error("Error saving profile:", e);
+    throw e;
   }
 };
 
@@ -39,6 +43,14 @@ export const logout = async () => {
 };
 
 // Types
+export interface CustomUser {
+  uid: string;
+  name: string;
+  email: string;
+  profession: string;
+  number: string;
+}
+
 export interface Expense {
   id?: string;
   amount: number;
