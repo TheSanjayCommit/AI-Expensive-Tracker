@@ -11,7 +11,7 @@ export default function HomeDashboard() {
     <div className="space-y-8 pb-10">
       <header className="space-y-1 animate-in fade-in slide-in-from-top-4 duration-500">
         <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-        <p className="text-foreground/50 text-sm">Welcome back, {user?.displayName?.split(" ")[0] || "User"}. Here's your financial summary.</p>
+        <p className="text-foreground/50 text-sm">Welcome back, {user?.name?.split(" ")[0] || "User"}. Here's your financial summary.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -1,12 +1,11 @@
 "use client";
 
 import { useExpenseContext } from "@/context/ExpenseContext";
-import { logout } from "@/lib/firebase";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function ProfilePage() {
-  const { user } = useExpenseContext();
+  const { user, logout } = useExpenseContext();
   const [budget, setBudget] = useState("1000");
 
   useEffect(() => {
@@ -34,15 +33,14 @@ export default function ProfilePage() {
 
         <div className="flex items-center gap-6 relative z-10">
           <div className="w-24 h-24 rounded-full border-4 border-white/10 shadow-xl overflow-hidden bg-primary-500/20 flex items-center justify-center">
-            {user.photoURL ? (
-              <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
-            ) : (
-              <UserIcon className="w-10 h-10 text-primary-500" />
-            )}
+            <UserIcon className="w-10 h-10 text-primary-500" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">{user.displayName}</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{user.name}</h2>
             <p className="text-foreground/60">{user.email}</p>
+            {user.profession && (
+              <p className="text-sm text-primary-500 font-medium">{user.profession}</p>
+            )}
             <span className="inline-block mt-2 px-3 py-1 bg-green-500/20 text-green-500 text-xs font-semibold rounded-full border border-green-500/20">Active Account</span>
           </div>
         </div>
