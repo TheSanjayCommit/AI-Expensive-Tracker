@@ -18,22 +18,33 @@ Extract the amount, category, vendor, and date from the following text: "${trans
 Assume the current date is ${new Date().toISOString()} if "today" or "yesterday" is mentioned.
 Return ONLY a raw valid JSON object with these exact keys: "amount" (number), "category" (string), "vendor" (string), "date" (string, ISO format YYYY-MM-DD format). Do not enclose it in markdown blocks or json ticks. Just the raw JSON.`;
 
+    const TEXT_MODELS = [
+      "openai/gpt-oss-120b",
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "llama-3.3-70b-versatile"
+    ];
+
     let result;
-    try {
-      result = await groq.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "llama-3.3-70b-versatile",
-        temperature: 0,
-        response_format: { type: "json_object" },
-      });
-    } catch (e: any) {
-      console.warn("Primary model error. Falling back to llama-3.1-8b-instant...");
-      result = await groq.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "llama-3.1-8b-instant",
-        temperature: 0,
-        response_format: { type: "json_object" },
-      });
+    let lastError;
+
+    for (const model of TEXT_MODELS) {
+      try {
+        result = await groq.chat.completions.create({
+          messages: [{ role: "user", content: prompt }],
+          model,
+          temperature: 0,
+          response_format: { type: "json_object" },
+        });
+        console.log(`Successfully parsed transcript using model: ${model}`);
+        break;
+      } catch (e: any) {
+        console.warn(`Model ${model} failed in transcript parsing: ${e.message}`);
+        lastError = e;
+      }
+    }
+
+    if (!result) {
+      throw new Error(`All text models failed for transcript parsing. Last error: ${lastError?.message}`);
     }
 
     const text = result.choices[0]?.message?.content || "";

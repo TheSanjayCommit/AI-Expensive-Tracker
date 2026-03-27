@@ -7,36 +7,47 @@ export async function POST(req: Request) {
   try {
     const apiKey = process.env.GROQ_API_KEY || "";
     const groq = new Groq({ apiKey });
-    const { expenses } = await req.json();
+    const { expenses, currency = "USD" } = await req.json();
     
     if (!expenses || expenses.length === 0) {
       return NextResponse.json({ tips: ["Record some expenses to get insights!"] });
     }
 
-    const expensesSummary = expenses.map((e: any) => `${e.date}: $${e.amount} at ${e.vendor} (${e.category})`).join("\n");
+    const expensesSummary = expenses.map((e: any) => `${e.date}: ${currency} ${e.amount} at ${e.vendor} (${e.category})`).join("\n");
 
-    const prompt = `Analyze the following user expenses and provide exactly 3 concise, actionable saving tips or insights.
-Format the output strictly as a JSON object with a single key "tips" containing a JSON array of strings. Do not include markdown formatting.
+    const prompt = `Analyze the following user expenses (all amounts in ${currency}) and provide exactly 3 concise, actionable saving tips or insights.
+Format the output strictly as a JSON object with a single key "tips" containing a JSON array of strings. Use the ${currency} symbol or code in your advice where applicable. Do not include markdown formatting.
 
 Expenses:
 ${expensesSummary}`;
 
+    const TEXT_MODELS = [
+      "openai/gpt-oss-120b",
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "llama-3.3-70b-versatile"
+    ];
+
     let result;
-    try {
-      result = await groq.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-      });
-    } catch (e: any) {
-      console.warn("Primary model error. Falling back to llama-3.1-8b-instant...");
-      result = await groq.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "llama-3.1-8b-instant",
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-      });
+    let lastError;
+
+    for (const model of TEXT_MODELS) {
+      try {
+        result = await groq.chat.completions.create({
+          messages: [{ role: "user", content: prompt }],
+          model,
+          temperature: 0.2,
+          response_format: { type: "json_object" },
+        });
+        console.log(`Successfully generated insights using model: ${model}`);
+        break;
+      } catch (e: any) {
+        console.warn(`Model ${model} failed in insights: ${e.message}`);
+        lastError = e;
+      }
+    }
+
+    if (!result) {
+      throw new Error(`All text models failed for insights. Last error: ${lastError?.message}`);
     }
     
     const text = result.choices[0]?.message?.content || "";

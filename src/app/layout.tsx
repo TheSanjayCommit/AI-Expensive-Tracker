@@ -27,13 +27,19 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#020617] text-white min-h-screen relative overflow-x-hidden`}
       >
-        <ExpenseProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </ExpenseProvider>
+        {/* Premium Background Effects */}
+        <div className="fixed inset-0 mesh-gradient pointer-events-none z-0" />
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-0" />
+        
+        <div className="relative z-10">
+          <ExpenseProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </ExpenseProvider>
+        </div>
       </body>
     </html>
   );

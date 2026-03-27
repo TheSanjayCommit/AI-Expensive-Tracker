@@ -17,7 +17,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 const getCategoryIcon = (category: string) => CATEGORY_ICONS[category] || "💸";
 
 export default function TransactionsPage() {
-  const { expenses, deleteExpense } = useExpenseContext();
+  const { expenses, deleteExpense, currencySymbol } = useExpenseContext();
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredExpenses = expenses.filter(exp => 
@@ -91,7 +91,7 @@ export default function TransactionsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <p className="font-bold text-lg text-foreground tracking-tight">${exp.amount.toFixed(2)}</p>
+                  <p className="font-bold text-lg text-foreground tracking-tight">{currencySymbol}{exp.amount.toFixed(2)}</p>
                   {exp.id && (
                     <button 
                       onClick={() => deleteExpense(exp.id!)}

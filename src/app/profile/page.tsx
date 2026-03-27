@@ -5,7 +5,7 @@ import { LogOut, User as UserIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function ProfilePage() {
-  const { user, logout } = useExpenseContext();
+  const { user, logout, currency, setCurrency, currencySymbol } = useExpenseContext();
   const [budget, setBudget] = useState("1000");
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function ProfilePage() {
 
   const handleSaveBudget = () => {
     localStorage.setItem("expense_budget", budget);
-    alert("Budget updated successfully! Changes will reflect on the dashboard.");
+    alert("Profile settings updated successfully!");
   };
 
   if (!user) return null;
@@ -47,25 +47,44 @@ export default function ProfilePage() {
 
         <div className="h-px w-full bg-white/10 relative z-10" />
 
-        <div className="space-y-4 relative z-10">
-          <h3 className="text-lg font-semibold">Monthly Budget Goal</h3>
-          <p className="text-sm text-foreground/50">Set a target budget to track on your dashboard progress bar.</p>
-          <div className="flex gap-4">
-            <div className="relative flex-1 max-w-xs">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/50 font-medium">$</span>
-              <input 
-                type="number" 
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-medium"
-              />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Monthly Budget Goal</h3>
+            <p className="text-sm text-foreground/50">Set a target budget to track on your dashboard.</p>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/50 font-medium">{currencySymbol}</span>
+                <input 
+                  type="number" 
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-medium"
+                />
+              </div>
+              <button 
+                onClick={handleSaveBudget}
+                className="px-4 py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10"
+              >
+                Save
+              </button>
             </div>
-            <button 
-              onClick={handleSaveBudget}
-              className="px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10"
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Currency Preference</h3>
+            <p className="text-sm text-foreground/50">Select your preferred currency for display.</p>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-medium appearance-none"
             >
-              Save
-            </button>
+              <option value="INR" className="bg-black text-white">INR (₹) - Indian Rupee</option>
+              <option value="USD" className="bg-black text-white">USD ($) - US Dollar</option>
+              <option value="EUR" className="bg-black text-white">EUR (€) - Euro</option>
+              <option value="GBP" className="bg-black text-white">GBP (£) - British Pound</option>
+              <option value="AUD" className="bg-black text-white">AUD (A$) - Australian Dollar</option>
+              <option value="CAD" className="bg-black text-white">CAD (C$) - Canadian Dollar</option>
+            </select>
           </div>
         </div>
 

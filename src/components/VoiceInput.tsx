@@ -113,7 +113,7 @@ export function VoiceInput({ onTranscriptComplete, isProcessing = false }: Voice
               : "Tap to record an expense"}
         </h3>
         <p className="text-sm text-foreground/70 min-h-[1.25rem]">
-           {transcript || (!isListening && !isProcessing && "e.g., 'Spent $25 on lunch at Subway'")}
+           {transcript || (!isListening && !isProcessing && "e.g., 'Spent 500 on lunch at Subway'")}
         </p>
       </div>
     </div>

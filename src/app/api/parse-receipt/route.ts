@@ -17,70 +17,85 @@ export async function POST(req: Request) {
     }
     const groq = new Groq({ apiKey });
 
-    const prompt = `You are an AI assistant parsing physical expense receipts. 
-Extract the total amount, category, vendor, and date from the uploaded receipt image.
-If the date is missing or illegible, assume today's date: ${new Date().toISOString()}.
-Return ONLY a raw valid JSON object with these exact keys: "amount" (number), "category" (string), "vendor" (string), "date" (string, ISO format YYYY-MM-DD format). Do not enclose it in markdown blocks.`;
+    // 2026 Resilient Vision Model List - Optimized for GA (General Availability)
+    const VISION_MODELS = [
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "llama-3.2-11b-vision-instruct",
+      "llama-3.2-90b-vision-instruct"
+    ];
+
+    const prompt = `You are a professional financial AI specialized in parsing paper receipts. 
+    Analyze the uploaded image and extract exactly 4 fields:
+    1. "amount": The total final amount paid (number).
+    2. "category": Choose the most likely category (e.g., Food, Transport, Shopping, Groceries, Utilities, Health, Other).
+    3. "vendor": The name of the merchant/store.
+    4. "date": The transaction date in YYYY-MM-DD format. If illegible, use "${new Date().toISOString().split('T')[0]}".
+    
+    Return ONLY a raw JSON object with these keys. No markdown, no extra text.`;
 
     let result;
+    let lastError;
     const base64Data = imageBase64.includes(",") ? imageBase64.split(",")[1] : imageBase64;
-    
-    try {
-      result = await groq.chat.completions.create({
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mimeType || "image/jpeg"};base64,${base64Data}`
+
+    // Retry loop for different vision models
+    for (const model of VISION_MODELS) {
+      try {
+        result = await groq.chat.completions.create({
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: prompt },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${mimeType || "image/jpeg"};base64,${base64Data}`
+                  }
                 }
-              }
-            ]
-          }
-        ],
-        model: "llama-3.2-11b-vision-preview",
-        temperature: 0,
-        response_format: { type: "json_object" },
-      });
-    } catch (e: any) {
-      console.warn("Primary vision model error. Falling back to llama-3.2-90b-vision-preview...");
-      result = await groq.chat.completions.create({
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mimeType || "image/jpeg"};base64,${base64Data}`
-                }
-              }
-            ]
-          }
-        ],
-        model: "llama-3.2-90b-vision-preview",
-        temperature: 0,
-        response_format: { type: "json_object" },
-      });
+              ]
+            }
+          ],
+          model,
+          temperature: 0,
+          response_format: { type: "json_object" },
+        });
+        
+        console.log(`Successfully parsed receipt using model: ${model}`);
+        break; // Success! Exit the loop
+      } catch (e: any) {
+        console.warn(`Model ${model} failed: ${e.message}. Trying next...`);
+        lastError = e;
+      }
+    }
+
+    if (!result) {
+      throw new Error(`All vision models failed. Last error: ${lastError?.message}`);
     }
 
     const text = result.choices[0]?.message?.content || "";
-    const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    // Robust JSON extraction
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const cleanText = jsonMatch ? jsonMatch[0] : text;
     
     try {
         const parsedData = JSON.parse(cleanText);
+        // Ensure numbers are truly numbers
+        if (parsedData.amount) parsedData.amount = parseFloat(parsedData.amount);
         return NextResponse.json(parsedData);
     } catch (e) {
-        console.error("Failed to parse Groq vision response as JSON", text);
-        return NextResponse.json({ error: "Failed to parse receipt data. Text returned: " + text }, { status: 500 });
+      console.error("Groq JSON Parse Error. Raw Text:", text);
+      return NextResponse.json({ 
+        error: "AI returned invalid format", 
+        raw: text 
+      }, { status: 500 });
     }
 
   } catch (error: any) {
-    console.error("Error analyzing receipt:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    console.error("Receipt API Error:", error.message);
+    return NextResponse.json({ 
+      error: error.message || "Internal Server Error",
+      details: error.response?.data || null
+    }, { status: 500 });
   }
 }

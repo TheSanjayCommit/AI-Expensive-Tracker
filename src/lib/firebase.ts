@@ -13,9 +13,18 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
+
+// Use a singleton for Firestore to avoid multiple instance initialization errors
+let db: any;
+try {
+  db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    ignoreUndefinedProperties: true,
+  });
+} catch (e) {
+  db = getFirestore(app);
+}
+
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
@@ -59,6 +68,7 @@ export interface CustomUser {
   email: string;
   profession: string;
   number: string;
+  currency?: string; // e.g. "INR", "USD", "EUR"
 }
 
 export interface Expense {
@@ -70,6 +80,7 @@ export interface Expense {
   rawText: string;
   createdAt: Date;
   userId: string;
+  currency?: string;
 }
 
 // Helper functions for Database
