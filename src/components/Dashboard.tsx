@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { Trash2, Download } from "lucide-react";
+import { Trash2, Download, TrendingUp, AlertCircle } from "lucide-react";
 import { Expense } from "@/lib/firebase";
 
 interface DashboardProps {
@@ -23,9 +23,13 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 const getCategoryIcon = (category: string) => CATEGORY_ICONS[category] || "💸";
 
-const BUDGET = 1000;
-
 export function Dashboard({ expenses, onDelete }: DashboardProps) {
+  const [budget, setBudget] = useState(1000);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("expense_budget");
+    if (saved) setBudget(Number(saved));
+  }, []);
   const totalSpent = useMemo(() => {
     return expenses.reduce((sum, exp) => sum + exp.amount, 0);
   }, [expenses]);
@@ -84,27 +88,54 @@ export function Dashboard({ expenses, onDelete }: DashboardProps) {
     <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Total Spent Card & Budget */}
-      <div className="glass dark:glass-dark rounded-3xl p-8 shadow-lg flex flex-col justify-center relative overflow-hidden">
+      <div className={`glass dark:glass-dark rounded-3xl p-8 shadow-lg flex flex-col justify-center relative overflow-hidden transition-all duration-500 ${totalSpent > budget ? 'ring-2 ring-red-500/20' : ''}`}>
         {/* Subtle background glow */}
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary-500/10 rounded-full blur-2xl flex-shrink-0" />
-        <h2 className="text-xl text-foreground/80 font-medium text-center">Total Spent</h2>
-        <p className="text-5xl font-bold bg-gradient-to-r from-primary-500 to-blue-500 bg-clip-text text-transparent mt-2 text-center">
-          ${totalSpent.toFixed(2)}
-        </p>
+        <div className={`absolute -top-10 -right-10 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none ${totalSpent > budget ? 'bg-red-500' : 'bg-primary-500'}`} />
         
-        <div className="mt-8 space-y-3 z-10 w-full max-w-md mx-auto">
-          <div className="flex justify-between text-sm font-medium">
-            <span className="text-foreground/70">Monthly Budget</span>
-            <span className={totalSpent > BUDGET ? "text-red-500" : "text-foreground"}>
-              ${totalSpent.toFixed(0)} / ${BUDGET}
-            </span>
+        <div className="flex flex-col items-center relative z-10">
+          <div className={`p-3 rounded-2xl mb-4 ${totalSpent > budget ? 'bg-red-500/10 text-red-500' : 'bg-primary-500/10 text-primary-500'}`}>
+            {totalSpent > budget ? <AlertCircle className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
           </div>
-          <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-3 overflow-hidden shadow-inner">
-            <div 
-              className={`h-full rounded-full transition-all duration-1000 ease-out ${totalSpent > BUDGET ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-primary-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]'}`}
-              style={{ width: `${Math.min((totalSpent / BUDGET) * 100, 100)}%` }}
-            />
+          <h2 className="text-sm font-semibold text-foreground/50 uppercase tracking-widest">Total Monthly Spending</h2>
+          <p className="text-6xl font-black bg-gradient-to-br from-white via-white to-white/40 bg-clip-text text-transparent mt-2">
+            ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        </div>
+        
+        <div className="mt-10 space-y-4 z-10 w-full max-w-md mx-auto">
+          <div className="flex justify-between items-end">
+             <div className="space-y-1">
+                <span className="text-xs font-bold text-foreground/40 uppercase tracking-wider block">Remaining</span>
+                <span className={`text-lg font-bold ${totalSpent > budget ? 'text-red-400' : 'text-emerald-400'}`}>
+                   ${Math.max(0, budget - totalSpent).toFixed(2)}
+                </span>
+             </div>
+            <div className="text-right space-y-1">
+              <span className="text-xs font-bold text-foreground/40 uppercase tracking-wider block">Budget Goal</span>
+              <span className="text-lg font-bold text-foreground/90">${budget}</span>
+            </div>
           </div>
+          
+          <div className="group relative">
+            <div className="w-full bg-black/20 dark:bg-white/5 rounded-full h-4 overflow-hidden shadow-inner border border-white/5">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ease-out relative ${
+                  totalSpent > budget 
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]' 
+                    : 'bg-gradient-to-r from-primary-600 to-blue-500 shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+                }`}
+                style={{ width: `${Math.min((totalSpent / budget) * 100, 100)}%` }}
+              >
+                <div className="absolute top-0 right-0 h-full w-2 bg-white/20 blur-[1px]" />
+              </div>
+            </div>
+          </div>
+          
+          {totalSpent > budget && (
+            <p className="text-xs text-red-400/80 font-medium animate-pulse text-center">
+              ⚠️ You have exceeded your monthly budget by ${(totalSpent - budget).toFixed(2)}
+            </p>
+          )}
         </div>
       </div>
 

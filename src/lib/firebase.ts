@@ -23,6 +23,16 @@ export { app, db, auth };
 
 export const saveProfile = async (profile: Omit<CustomUser, "uid">) => {
   try {
+    // Check if user already exists
+    const q = query(collection(db, "users"), where("email", "==", profile.email));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const existingDoc = querySnapshot.docs[0];
+      return { uid: existingDoc.id, ...existingDoc.data() } as CustomUser;
+    }
+
+    // Create new user if not exists
     const docRef = await addDoc(collection(db, "users"), {
       ...profile,
       createdAt: new Date(),
