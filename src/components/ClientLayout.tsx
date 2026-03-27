@@ -18,7 +18,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  /* Temporarily disabled login screen
   if (!user) {
     return (
       <main className="min-h-screen relative p-6 sm:p-12 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
@@ -48,7 +47,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       </main>
     );
   }
-  */
 
   // Authenticated Layout
   return (
