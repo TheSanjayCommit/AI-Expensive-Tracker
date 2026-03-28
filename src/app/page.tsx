@@ -11,7 +11,7 @@ export default function HomeDashboard() {
   const { expenses, deleteExpense, user } = useExpenseContext();
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-8 pb-40 md:pb-32">
       <header className="space-y-1">
         <motion.div
           initial={{ opacity: 0, x: -20 }}

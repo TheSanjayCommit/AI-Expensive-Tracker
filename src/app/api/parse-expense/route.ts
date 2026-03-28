@@ -35,7 +35,6 @@ Return ONLY a raw valid JSON object with these exact keys: "amount" (number), "c
           temperature: 0,
           response_format: { type: "json_object" },
         });
-        console.log(`Successfully parsed transcript using model: ${model}`);
         break;
       } catch (e: any) {
         console.warn(`Model ${model} failed in transcript parsing: ${e.message}`);

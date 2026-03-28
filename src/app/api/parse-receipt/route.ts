@@ -60,7 +60,6 @@ export async function POST(req: Request) {
           response_format: { type: "json_object" },
         });
         
-        console.log(`Successfully parsed receipt using model: ${model}`);
         break; // Success! Exit the loop
       } catch (e: any) {
         console.warn(`Model ${model} failed: ${e.message}. Trying next...`);

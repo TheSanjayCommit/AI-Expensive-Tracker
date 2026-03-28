@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Check, CreditCard, Calendar, Store, Tag, ChevronRight } from "lucide-react";
 import { useExpenseContext } from "@/context/ExpenseContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ManualEntryProps {
   onAddExpense: (expense: { amount: number; category: string; vendor: string; date: string; rawText: string }) => Promise<void>;
@@ -41,71 +42,97 @@ export function ManualEntry({ onAddExpense }: ManualEntryProps) {
 
   if (!isOpen) {
     return (
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(true)}
-        className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-2xl glass-panel text-foreground/70 hover:text-foreground hover:bg-white/5 transition-all text-sm font-medium"
+        className="w-full flex items-center justify-center gap-4 py-8 rounded-[2.5rem] glass-premium text-foreground/70 hover:text-white transition-all bg-white/5 border border-white/5 hover:border-blue-500/30 group relative overflow-hidden"
       >
-        <Plus className="w-4 h-4" /> Add Manually
-      </button>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="p-4 bg-blue-500 text-white rounded-[1.5rem] shadow-xl shadow-blue-500/20 group-hover:scale-110 transition-transform relative z-10">
+          <Plus className="w-8 h-8" />
+        </div>
+        <div className="text-left relative z-10">
+          <p className="text-lg font-black tracking-tight leading-tight">Add Manually</p>
+          <p className="text-[10px] uppercase font-black tracking-widest text-foreground/40 mt-1">Direct Record Entry</p>
+        </div>
+      </motion.button>
     );
   }
 
   return (
-    <div className="mt-4 p-6 glass-panel rounded-3xl animate-in fade-in slide-in-from-top-4 relative">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="p-8 glass-premium rounded-[3rem] shadow-2xl border border-white/5 relative"
+    >
       <button 
         onClick={() => setIsOpen(false)}
-        className="absolute top-4 right-4 text-foreground/50 hover:text-foreground transition-colors"
+        className="absolute top-6 right-6 p-2 text-foreground/20 hover:text-white hover:bg-white/5 rounded-full transition-all"
       >
         <X className="w-5 h-5" />
       </button>
       
-      <h3 className="text-lg font-bold mb-4">Manual Entry</h3>
+      <div className="flex items-center gap-3 mb-8">
+         <div className="p-2 bg-blue-500/10 rounded-xl">
+            <Plus className="w-4 h-4 text-blue-400" />
+         </div>
+         <h3 className="text-lg font-black tracking-tight">Manual Entry</h3>
+      </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs text-foreground/70 ml-1">Amount ({currencySymbol})</label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground/30 pl-1">
+               <CreditCard className="w-3.5 h-3.5" /> Amount ({currencySymbol})
+            </div>
             <input 
               type="number" 
               step="0.01"
               required
               value={formData.amount}
               onChange={(e) => setFormData({...formData, amount: e.target.value})}
-              className="w-full bg-black/20 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-mono"
+              className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-2xl font-black tracking-tighter focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/40 outline-none transition-all placeholder:text-foreground/10"
               placeholder="0.00"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-foreground/70 ml-1">Date</label>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground/30 pl-1">
+               <Calendar className="w-3.5 h-3.5" /> Transaction Date
+            </div>
             <input 
               type="date" 
               required
               value={formData.date}
               onChange={(e) => setFormData({...formData, date: e.target.value})}
-              className="w-full bg-black/20 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+              className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/40 outline-none transition-all"
             />
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs text-foreground/70 ml-1">Vendor/Title</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground/30 pl-1">
+               <Store className="w-3.5 h-3.5" /> Vendor / Merchant
+            </div>
             <input 
               type="text" 
               required
               value={formData.vendor}
               onChange={(e) => setFormData({...formData, vendor: e.target.value})}
-              className="w-full bg-black/20 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
-              placeholder="e.g. Uber"
+              className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/40 outline-none transition-all placeholder:text-foreground/10"
+              placeholder="e.g. Starbucks"
             />
           </div>
-          <div className="space-y-1 relative group/select">
-            <label className="text-xs text-foreground/70 ml-1">Category</label>
+          <div className="space-y-2 relative group/select">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground/30 pl-1">
+               <Tag className="w-3.5 h-3.5" /> Category
+            </div>
             <div className="relative">
               <select 
                 value={formData.category}
                 onChange={(e) => setFormData({...formData, category: e.target.value})}
-                className="w-full bg-black/20 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary-500/50 transition-all appearance-none cursor-pointer"
+                className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/40 outline-none appearance-none cursor-pointer transition-all"
               >
                 <option value="Food" className="bg-slate-900 text-white">Food & Dining</option>
                 <option value="Transport" className="bg-slate-900 text-white">Transport</option>
@@ -116,23 +143,39 @@ export function ManualEntry({ onAddExpense }: ManualEntryProps) {
                 <option value="Health" className="bg-slate-900 text-white">Health</option>
                 <option value="Other" className="bg-slate-900 text-white">Other</option>
               </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-foreground/30">
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-foreground/20">
+                <CustomChevron className="w-5 h-5 rotate-90" />
               </div>
             </div>
           </div>
         </div>
 
-        <button 
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="submit" 
           disabled={isLoading}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-primary-500 to-blue-500 text-white font-medium hover:opacity-90 transition-opacity flex justify-center items-center gap-2 shadow-lg shadow-primary-500/20 disabled:opacity-50"
+          className="w-full py-5 rounded-[1.5rem] bg-white text-black font-black uppercase tracking-widest text-[10px] hover:bg-blue-500 hover:text-white transition-all flex justify-center items-center gap-3 shadow-2xl shadow-white/5 group disabled:opacity-50"
         >
-          {isLoading ? "Saving..." : "Save Expense"}
-        </button>
+          {isLoading ? <span className="animate-pulse">Archiving...</span> : (
+            <>
+              <div className="p-1 bg-black/5 group-hover:bg-white/10 rounded-lg transition-colors">
+                <Check className="w-4 h-4" />
+              </div>
+              Archive Transaction
+            </>
+          )}
+        </motion.button>
       </form>
-    </div>
+    </motion.div>
   );
 }
+
+function CustomChevron({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 3L6 5L4 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+

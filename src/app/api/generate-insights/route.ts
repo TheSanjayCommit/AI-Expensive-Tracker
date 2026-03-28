@@ -38,7 +38,6 @@ ${expensesSummary}`;
           temperature: 0.2,
           response_format: { type: "json_object" },
         });
-        console.log(`Successfully generated insights using model: ${model}`);
         break;
       } catch (e: any) {
         console.warn(`Model ${model} failed in insights: ${e.message}`);

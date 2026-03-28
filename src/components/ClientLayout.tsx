@@ -3,6 +3,9 @@
 import { Navigation } from "./Navigation";
 import { useExpenseContext } from "@/context/ExpenseContext";
 import { useState } from "react";
+import { AIFinancialAssistant } from "./AIFinancialAssistant";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Mail, Briefcase, Phone, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, register } = useExpenseContext();
@@ -39,75 +42,127 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   };
 
   if (!user) {
+    const containerVariants = {
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.1,
+          delayChildren: 0.3
+        }
+      }
+    };
+
+    const itemVariants = {
+      hidden: { opacity: 0, y: 20 },
+      visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+    };
+
     return (
-      <main className="min-h-screen relative p-6 sm:p-12 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary-600/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[100px] translate-x-1/3" />
+      <main className="min-h-screen relative p-6 sm:p-12 flex flex-col items-center justify-center overflow-hidden bg-[#020617] text-white">
+        {/* Deep Theatre Background Blobs */}
+        <div className="fixed top-0 left-0 w-[800px] h-[800px] bg-primary-600/10 rounded-full blur-[150px] -translate-x-1/2 -translate-y-1/2 animate-pulse-subtle pointer-events-none" />
+        <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px] translate-x-1/3 translate-y-1/3 animate-pulse-subtle pointer-events-none" />
         
-        <div className="glass dark:glass-dark rounded-3xl p-8 sm:p-10 text-center shadow-2xl relative z-10 max-w-lg w-full border border-white/10 animate-in zoom-in-95 duration-700">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-blue-500 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-primary-500/30 mb-6 border border-white/20">
-             <span className="text-3xl">🎙️</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2 bg-gradient-to-br from-white to-white/70 bg-clip-text text-transparent">Get Started</h1>
-          <p className="text-foreground/60 mb-8 leading-relaxed font-medium">Enter your details to start tracking with AI.</p>
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="glass-premium rounded-[2.5rem] p-8 sm:p-12 text-center shadow-2xl relative z-10 max-w-xl w-full border border-white/5"
+        >
+          <motion.div variants={itemVariants} className="relative inline-block mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-500/20 to-blue-500/20 rounded-3xl flex items-center justify-center shadow-2xl border border-white/10 relative z-10">
+               <Sparkles className="w-10 h-10 text-primary-400" />
+            </div>
+            <div className="absolute -inset-4 bg-primary-500/20 blur-2xl rounded-full animate-pulse-rich -z-10" />
+          </motion.div>
+
+          <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl font-black tracking-tighter mb-4 bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
+            Get Started
+          </motion.h1>
+          <motion.p variants={itemVariants} className="text-foreground/40 mb-10 leading-relaxed font-black uppercase tracking-[0.2em] text-xs">
+            Enter your details to start tracking with AI.
+          </motion.p>
           
-          <form onSubmit={handleSubmit} className="space-y-4 text-left">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/70 ml-1">Full Name</label>
-              <input 
-                required
-                type="text" 
-                placeholder="John Doe"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-sans"
-                value={formData.name}
-                onChange={e => setFormData({...formData, name: e.target.value})}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground/70 ml-1">Email Address</label>
-              <input 
-                required
-                type="email" 
-                placeholder="john@example.com"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-sans"
-                value={formData.email}
-                onChange={e => setFormData({...formData, email: e.target.value})}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground/70 ml-1">Profession</label>
+          <form onSubmit={handleSubmit} className="space-y-6 text-left">
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 px-1">Full Name</label>
+              <div className="relative group">
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-primary-400 transition-colors" />
                 <input 
+                  required
                   type="text" 
-                  placeholder="Developer"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-sans"
-                  value={formData.profession}
-                  onChange={e => setFormData({...formData, profession: e.target.value})}
+                  placeholder="Sanjay Nalamasa"
+                  className="input-premium pl-14"
+                  value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground/70 ml-1">Phone Number</label>
+            </motion.div>
+            
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 px-1">Email Address</label>
+              <div className="relative group">
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-primary-400 transition-colors" />
                 <input 
-                  type="tel" 
-                  placeholder="+1 234 567 890"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-sans"
-                  value={formData.number}
-                  onChange={e => setFormData({...formData, number: e.target.value})}
+                  required
+                  type="email" 
+                  placeholder="sanjaynalamasa07@gmail.com"
+                  className="input-premium pl-14"
+                  value={formData.email}
+                  onChange={e => setFormData({...formData, email: e.target.value})}
                 />
               </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <motion.div variants={itemVariants} className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 px-1">Profession</label>
+                <div className="relative group">
+                  <Briefcase className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-primary-400 transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="Developer"
+                    className="input-premium pl-14"
+                    value={formData.profession}
+                    onChange={e => setFormData({...formData, profession: e.target.value})}
+                  />
+                </div>
+              </motion.div>
+              <motion.div variants={itemVariants} className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 px-1">Phone Number</label>
+                <div className="relative group">
+                  <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-primary-400 transition-colors" />
+                  <input 
+                    type="tel" 
+                    placeholder="+1 234 567 890"
+                    className="input-premium pl-14"
+                    value={formData.number}
+                    onChange={e => setFormData({...formData, number: e.target.value})}
+                  />
+                </div>
+              </motion.div>
             </div>
 
-            <button 
+            <motion.button 
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               disabled={isSubmitting}
               type="submit"
-              className="w-full mt-6 py-4 px-6 rounded-2xl bg-white text-black font-bold text-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
+              className="btn-premium w-full mt-4 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 group overflow-hidden relative"
             >
-              {isSubmitting ? "Saving..." : "Start Tracking"}
-            </button>
+              <span className="relative z-10">{isSubmitting ? "Syncing..." : "Start Tracking"}</span>
+              {!isSubmitting && <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />}
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-primary-500/20 translate-y-1 group-hover:translate-y-0 transition-transform" />
+            </motion.button>
+            
+            <motion.div variants={itemVariants} className="pt-6 flex items-center justify-center gap-2 text-foreground/20">
+               <ShieldCheck className="w-4 h-4" />
+               <span className="text-[10px] font-black uppercase tracking-widest">End-to-End Encrypted</span>
+            </motion.div>
           </form>
-        </div>
+        </motion.div>
       </main>
     );
   }
@@ -124,7 +179,11 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <div className="p-6 md:p-10 max-w-6xl mx-auto relative z-10 min-h-full">
           {children}
         </div>
+
+        {/* Global Financial Assistant */}
+        <AIFinancialAssistant />
       </main>
     </div>
   );
 }
+
